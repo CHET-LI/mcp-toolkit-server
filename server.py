@@ -1,7 +1,4 @@
-"""neko-tools-mcp-server — 把 neko_lessons 里的可复用模块封装成 MCP 工具。
-
-借鉴 N.E.K.O（Project-N-E-K-O/N.E.K.O）源码提炼出的 5 个模块，包装成
-FastMCP stdio server，供 QwenPaw 的 QA / default / local01 等 agent 直接调用。
+"""MCP Toolkit Server — 通用 MCP 工具集，供 AI agent 直接调用。
 
 模块 -> 工具：
   temporal    -> time_resolve / time_since      （相对时间->ISO 锚点，ISO->人话）
@@ -9,8 +6,6 @@ FastMCP stdio server，供 QwenPaw 的 QA / default / local01 等 agent 直接�
   trust       -> relation_judge                 （两句话关系：confirm/reject/different）
   arr         -> dedup_record / dedup_score     （防重复/车轱辘话，进程内语料）
   directives  -> directive_store / directive_render（"别再提X"持久化，TTL 3 天）
-
-2026-08-06 追加：godotiq_lessons 提炼模块（学自 salvo10f/godotiq，MIT）
   tscn_analyzer -> tscn_parse / project_scan / transform3d_decompose
     （不依赖 Godot 的 .tscn/.tres 静态解析：值全类型 + 场景对象树 + 全项目索引）
 
@@ -26,22 +21,7 @@ import os
 import sys
 from typing import List, Optional
 
-# 让 server 能找到 neko_lessons（server 与库不在同一目录）
-NEKO_LESSONS_DIR = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..",
-    "workspaces", "QwenPaw_QA_Agent_0.2", "neko_lessons",
-)
-if os.path.isdir(NEKO_LESSONS_DIR) and NEKO_LESSONS_DIR not in sys.path:
-    sys.path.insert(0, NEKO_LESSONS_DIR)
-
-# 让 server 能找到 godotiq_lessons（tscn_analyzer 提炼库）
-GODOTIQ_LESSONS_DIR = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..",
-    "workspaces", "QwenPaw_QA_Agent_0.2", "godotiq_lessons",
-)
-if os.path.isdir(GODOTIQ_LESSONS_DIR) and GODOTIQ_LESSONS_DIR not in sys.path:
-    sys.path.insert(0, GODOTIQ_LESSONS_DIR)
-
+# 全部依赖模块与本文件同目录（arr/directives/proactive/temporal/trust/tscn_analyzer）
 import temporal as _temporal
 import proactive as _proactive
 import trust as _trust
@@ -50,7 +30,7 @@ from directives import DirectiveStore
 try:
     from tscn_analyzer import parse_tscn, parse_value, scan_project, decompose_transform3d
     TSCN_AVAILABLE = True
-except ImportError as _e:  # pragma: no cover - godotiq_lessons 缺失时降级
+except ImportError as _e:  # pragma: no cover - tscn_analyzer 缺失时降级
     TSCN_AVAILABLE = False
     print(f"[warn] tscn_analyzer 不可用: {_e}", file=sys.stderr)
 
@@ -63,7 +43,7 @@ _corpus = AntiRepeatCorpus(os.path.join(_DATA_DIR, "anti_repeat.json"))
 _directives = DirectiveStore(os.path.join(_DATA_DIR, "directives"))
 
 from mcp.server.fastmcp import FastMCP
-_MCP = FastMCP("neko-tools")
+_MCP = FastMCP("mcp-toolkit")
 
 
 # ── temporal ──────────────────────────────────────────────
