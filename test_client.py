@@ -1,4 +1,4 @@
-"""neko-tools-mcp-server 端到端自测。
+"""mcp-toolkit-server 端到端自测。
 跑法：.venv\\Scripts\\python.exe test_client.py   （用 venv 里的 mcp）
   A) 直接校验每个模块底层函数（I/O 正确性）
   B) 用 mcp.stdio 客户端走真实 MCP 会话（握手 + list_tools + 逐个 call）
